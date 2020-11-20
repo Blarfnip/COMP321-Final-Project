@@ -1,10 +1,10 @@
-Shader "Unlit/AppearingShader"
+Shader "Unlit/VanishingShader"
 {
     Properties
     {
         _Tex("default texture",2D) = "default" {}
         _Color("default color",Color) = (1.0,1.0,1.0,1.0)
-        _Transparency("Transparency", Range(0.0,1.0)) = 0.0
+        _Transparency("Transparency", Range(0.0,1.0)) = 0.8
         
     }
 
@@ -58,9 +58,9 @@ Shader "Unlit/AppearingShader"
                 fixed4 col = tex2D(_Tex, i.uv) + _Color;
                 //time is a packed array
                 //y value is time in secs
-                col.a = _Transparency+_Time.y/15;
+                col.a = _Transparency-_Time.y/15;
                 //clip() discards the color value
-                if (col.a>1) col.a = 1;
+                if (col.a<0.01) clip(col.a);
                 return col;
             }
             ENDCG
