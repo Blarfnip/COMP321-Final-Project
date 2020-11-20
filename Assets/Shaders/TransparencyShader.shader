@@ -54,9 +54,12 @@ Shader "Unlit/TransparencyShader"
             
             fixed4 frag (v2f i) : SV_Target
             {
-                //Avoid loops in general
+                //no loops
                 fixed4 col = tex2D(_Tex, i.uv) + _Color;
+                //time is a packed array
+                //y value is time in secs
                 col.a = _Transparency-_Time.y/10;
+                //clip() discards the color value
                 if (col.a<0.01) clip(col.a);
                 return col;
             }
