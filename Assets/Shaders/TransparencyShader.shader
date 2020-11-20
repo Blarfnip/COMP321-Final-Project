@@ -54,10 +54,10 @@ Shader "Unlit/TransparencyShader"
             
             fixed4 frag (v2f i) : SV_Target
             {
-                
+                //Avoid loops in general
                 fixed4 col = tex2D(_Tex, i.uv) + _Color;
                 col.a = _Transparency-_Time.y/10;
-                if (col.a<0.01) clip(col.r),clip(col.g),clip(col.b);
+                if (col.a<0.01) clip(col.a);
                 return col;
             }
             ENDCG
