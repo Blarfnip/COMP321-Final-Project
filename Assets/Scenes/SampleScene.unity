@@ -138,7 +138,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!23 &18953505
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -309,7 +309,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!23 &758249267
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -388,7 +388,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!23 &781571506
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -468,7 +468,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!64 &923978947
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -621,13 +621,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.10212465, y: -0, z: -0, w: 0.9947716}
-  m_LocalPosition: {x: 0, y: 3.42, z: -11.44}
+  m_LocalRotation: {x: 0.094384104, y: 0.37989998, z: -0.039001107, w: 0.919373}
+  m_LocalPosition: {x: -1.6, y: 4.39, z: -0.96}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 11.723001, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 11.723001, y: 44.902, z: 0}
 --- !u!114 &963194229
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -640,8 +640,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fdeed96d6dd2eea4b9d22e8e89ab2f33, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  useAntiAliasing: 1
   rayTracingShader: {fileID: 7200000, guid: c412ace0b39904f4bb633f9975a5ff31, type: 3}
   skyboxTexture: {fileID: 2800000, guid: fb6e03c6f9cfcf54b8f4982623246b5c, type: 3}
+  directionalLight: {fileID: 705507994}
+  reflections: 2
 --- !u!1 &1255918544
 GameObject:
   m_ObjectHideFlags: 0
@@ -660,7 +663,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!135 &1255918545
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -753,7 +756,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!135 &1394642301
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -846,7 +849,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1439523565
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -939,7 +942,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!65 &1484542046
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -1032,7 +1035,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!64 &1586873584
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -1125,7 +1128,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!23 &2073337639
 MeshRenderer:
   m_ObjectHideFlags: 0

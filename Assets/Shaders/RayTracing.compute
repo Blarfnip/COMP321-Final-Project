@@ -4,9 +4,21 @@
 // PI Const used for trig stuff
 static const float PI = 3.14159265f;
 
+// User adjustable variable for determining amount of raycast bounces to calculate
+uint ReflectionAmount = 3;
+
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 RWTexture2D<float4> Result;
+
+// Used for sub-pixel moving of the rays.
+// This is used in conjunction with another shader for providing
+// temporal anti-aliasing
+float2 SubPixelOffset;
+
+// Compressed values for the Directional light in the scene
+// Compressed: {position: (xyz), intensity: (w)}
+float4 DirectionalLight;
 
 // Reference to Skybox HDRI texture
 // Example taken from here: https://hdrihaven.com/hdri/?c=skies&h=kiara_1_dawn
@@ -37,11 +49,13 @@ float4x4 CameraInverseProjection;
 // Data object (struct) for defining a Ray.
 // float3 is a compound data type that acts as a 3d vector.
 // It has 3 float values: x, y, z (or r, g, b)
-// To create a ray two things are required, the position of the ray origin
-// and the direction the ray is going from that origin
+// To create a ray three things are required, the position of the ray origin
+// the direction the ray is going from that origin, and the energy the ray has.
+// Energy is used for calculating reflections
 struct Ray {
     float3 origin;
     float3 direction;
+    float3 energy;
 };
 
 // Constructor for Ray structs
@@ -49,6 +63,7 @@ Ray CreateRay(float3 origin, float3 direction) {
     Ray ray;
     ray.origin = origin;
     ray.direction = direction;
+    ray.energy = float3(1.0f, 1.0f, 1.0f);
     return ray;
 }
 
@@ -73,6 +88,132 @@ Ray CreateCameraRay(float2 uv)
     return CreateRay(origin, direction);
 }
 
+// Data object (struct) for defining the Ray collision
+// Ray Hits consist of:
+// The position of the collision in world space
+// The distance the ray traveled from the camera
+// The normal vector of the surface at the hit position
+struct RayHit {
+    float3 position;
+    float distance;
+    float3 normal;
+};
+
+// Constructor for RayHit structs
+// Values will be populated after constructed if hits occur
+// otherwise the ray retains these values (infinite distance ray)
+RayHit CreateRayHit() {
+    RayHit hit;
+    hit.position = float3(0.0f, 0.0f, 0.0f);
+    hit.distance = 1.#INF; // This is shorthand for Infinity, although there is little docs for it
+    hit.normal = float3(0.0f, 0.0f, 0.0f);
+    return hit;
+}
+
+// Function for tracing a fixed ground plane
+// HLSL parameters are pass by value by default. "inout" makes it pass by reference
+void IntersectGroundPlane(Ray ray, inout RayHit bestHit) {
+    float floorHeight = 0;
+
+    // Calculate the distance along the ray where the ground plane is intersected
+    // I don't like this math, but it checks out if you write it down
+    float t = -(ray.origin.y - floorHeight) / ray.direction.y;
+
+    // if intersec distance is greater than 0 and less than Infinity or the other closest distance
+    if(t > 0 && t < bestHit.distance) {
+
+        // Populate hit values
+        bestHit.distance = t;
+        bestHit.position = ray.origin + (t * ray.direction);
+        // Plane is flat along XZ axis, so the normal value will be in the Y axis
+        bestHit.normal = float3(0.0f, 1.0f, 0.0f);
+    }
+}
+
+// Function for tracing a sphere defined as a float4 {position: (xyz), radius: (w)}
+// Math for intersection function can be found here: https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
+void IntersectSphere(Ray ray, inout RayHit bestHit, float4 sphere) {
+    float3 d = ray.origin - sphere.xyz;
+    float p1 = -dot(ray.direction, d);
+    float p2sqr = p1 * p1 - dot(d, d) + sphere.w * sphere.w;
+    if(p2sqr < 0)
+        return;
+    float2 p2 = sqrt(p2sqr);
+    float t = p1 - p2 > 0 ? p1 - p2 : p1 + p2;
+    if(t > 0 && t < bestHit.distance) {
+        bestHit.distance = t;
+        bestHit.position = ray.origin + (t * ray.direction);
+        bestHit.normal = normalize(bestHit.position - sphere.xyz);
+    }
+}
+
+// Function used for calculating the intersection of a ray
+RayHit Trace(Ray ray) {
+    RayHit bestHit = CreateRayHit();
+
+    // Calculate intersections for the ground plane
+    IntersectGroundPlane(ray, bestHit);
+
+    // Calculate intersections fro 100 spheres
+    for(int x = 0; x < 10; x++) {
+        for(int z = 0; z < 10; z++) {
+            IntersectSphere(ray, bestHit, float4(x * 4.0, 1.0f, z * 4.0, 1.0f));
+        }
+    }
+    return bestHit;
+}
+
+float3 Shade(inout Ray ray, RayHit hit) {
+    if(hit.distance < 1.#INF) {
+        // Arbitrary specularity and albedo values
+        // Modify these values for different results
+        float3 specular = float3(0.1f, 0.1f, 0.1f);
+        float3 albedo = float3(0.8f, 0.8f, 0.8f);
+
+        // Set the origin to the ray hit point (but a little above the surface)
+        ray.origin = hit.position + hit.normal * 0.001f;
+        // Reflect the direction using the hit normal
+        // Microsoft Docs: https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-reflect
+        ray.direction = reflect(ray.direction, hit.normal);
+        // Reduce ray energy by specular amount
+        ray.energy *= specular;
+
+        // Calculate another ray for shadows.
+        // Place the ray origin at the surface of the ray intersection
+        Ray shadowRay = CreateRay(hit.position + hit.normal * 0.001f, -1 * DirectionalLight.xyz);
+        // Cast it towards the directional light        
+        RayHit shadowHit = Trace(shadowRay);
+        // If the ray hit something before reaching the skybox, then it is in shadow
+        // return the shadow color
+        if(shadowHit.distance != 1.#INF) {
+            return float3(0.0f, 0.0f, 0.0f);
+        }
+
+        // Use the dot product to calculate the amount of shadowing of an object.
+        // Color is based on light intensity and albedo color
+        return saturate(dot(hit.normal, DirectionalLight.xyz) * -1) * DirectionalLight.w * albedo;
+    } else {
+        // Rays that hit the skybox have no reflections, so no energy
+        ray.energy = 0.0f;
+
+        // Skybox
+        // If the ray never hits anything, use the direction to find the correct color
+        // from the Skybox texture.
+        // The direction is in Cartesian Coordinates, and must be converted to Spherical Coordinates
+        // because that's how the Skybox texture is stored.
+        // Wiki on Conversion Equations: https://en.wikipedia.org/wiki/Spherical_coordinate_system#Coordinate_system_conversions
+        // (The x,y,z don't line up with the equations because Unity uses a different axis system)
+        float theta = acos(ray.direction.y) / -PI;
+        float phi = atan2(ray.direction.x, -ray.direction.z) / -PI * 0.5f;
+
+        // SampleLevel is an advanced texture sampling function.
+        // It samples a texture's LOD level/mip map level based on the last parameter. (0 being the most detailed)
+        // The float2 represents the coordinates on the texture to sample.
+        // Microsoft DirectX Docs: https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-samplelevel
+        return SkyboxTexture.SampleLevel(samplerSkyboxTexture, float2(phi, theta), 0);
+    }
+}
+
 [numthreads(8,8,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
@@ -81,25 +222,28 @@ void CSMain (uint3 id : SV_DispatchThreadID)
     Result.GetDimensions(width, height);
 
     // Convert pixel location to normalized position [0.0, 1.0]
-    float2 uv = (id.xy + float2(0.5f, 0.5f)) / float2(width, height);
+    float2 uv = (id.xy + SubPixelOffset) / float2(width, height);
     // Convert to Clip Space [-1.0, 1.0]
     uv = uv * 2.0f - 1.0f;
 
+    // Create a ray using the uv calculated using this pixel coordinate
     Ray ray = CreateCameraRay(uv);
 
-    // Skybox
-    // If the ray never hits anything, use the direction to find the correct color
-    // from the Skybox texture.
-    // The direction is in Cartesian Coordinates, and must be converted to Spherical Coordinates
-    // because that's how the Skybox texture is stored.
-    // Wiki on Conversion Equations: https://en.wikipedia.org/wiki/Spherical_coordinate_system#Coordinate_system_conversions
-    // (The x,y,z don't line up with the equations because Unity uses a different axis system)
-    float theta = acos(ray.direction.y) / -PI;
-    float phi = atan2(ray.direction.x, -ray.direction.z) / -PI * 0.5f;
+    float3 result = float3(0,0,0);
+    for(uint i = 0; i < ReflectionAmount; i++) {
+        // Raytrace the ray
+        RayHit hit = Trace(ray);
 
-    // SampleLevel is an advanced texture sampling function.
-    // It samples a texture's LOD level/mip map level based on the last parameter. (0 being the most detailed)
-    // The float2 represents the coordinates on the texture to sample.
-    // Microsoft DirectX Docs: https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-samplelevel
-    Result[id.xy] = SkyboxTexture.SampleLevel(samplerSkyboxTexture, float2(phi, theta), 0);
+        // Shade the resulting hit
+        result += ray.energy * Shade(ray, hit);
+
+        // if the ray has no energy left, bail
+        // any function Docs: https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-any
+        if(!any(ray.energy))
+            break;
+    }
+    
+
+    // Output the final shaded value for the pixel
+    Result[id.xy] = float4(result, 1);
 }
