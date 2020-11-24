@@ -641,6 +641,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   rayTracingShader: {fileID: 7200000, guid: c412ace0b39904f4bb633f9975a5ff31, type: 3}
+  skyboxTexture: {fileID: 2800000, guid: fb6e03c6f9cfcf54b8f4982623246b5c, type: 3}
 --- !u!1 &1255918544
 GameObject:
   m_ObjectHideFlags: 0

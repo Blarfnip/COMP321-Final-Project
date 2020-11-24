@@ -1,14 +1,105 @@
 ﻿// Each #kernel tells which function to compile; you can have many kernels
 #pragma kernel CSMain
 
+// PI Const used for trig stuff
+static const float PI = 3.14159265f;
+
 // Create a RenderTexture with enableRandomWrite flag and set it
 // with cs.SetTexture
 RWTexture2D<float4> Result;
 
+// Reference to Skybox HDRI texture
+// Example taken from here: https://hdrihaven.com/hdri/?c=skies&h=kiara_1_dawn
+Texture2D<float4> SkyboxTexture;
+// Texture sampler for getting values from the texture.
+// This is an advanced way of sampling from textures and comes with the advantage
+// of minimizing samplers if more textures are needed.
+// Official Unity Docs: https://docs.unity3d.com/Manual/SL-SamplerStates.html
+SamplerState samplerSkyboxTexture;
+
+// Matrices
+// Here is a really comprehensive explanation of the following matrices
+// https://answers.unity.com/questions/1359718/what-do-the-values-in-the-matrix4x4-for-cameraproj.html
+
+
+// TRS matrix used for converting from world space to Camera-local space
+// These matrices contain Translation, Rotation, and Scale data
+// Read about decomposing here: https://answers.unity.com/questions/402280/how-to-decompose-a-trs-matrix.html
+// Official Unity Docs: https://docs.unity3d.com/ScriptReference/Matrix4x4.TRS.html
+float4x4 CameraToWorld;
+
+// A Projection matrix is used for transforming points from Camera Space to Clip Space
+// We are using the inverse of that to convert a point in "clip space" (similar to view space)
+// to Camera space.
+// Official Unity Docs: https://docs.unity3d.com/ScriptReference/Camera-projectionMatrix.html
+float4x4 CameraInverseProjection;
+
+// Data object (struct) for defining a Ray.
+// float3 is a compound data type that acts as a 3d vector.
+// It has 3 float values: x, y, z (or r, g, b)
+// To create a ray two things are required, the position of the ray origin
+// and the direction the ray is going from that origin
+struct Ray {
+    float3 origin;
+    float3 direction;
+};
+
+// Constructor for Ray structs
+Ray CreateRay(float3 origin, float3 direction) {
+    Ray ray;
+    ray.origin = origin;
+    ray.direction = direction;
+    return ray;
+}
+
+Ray CreateCameraRay(float2 uv)
+{
+    // Grab the camera origin in world space from the CameraToWorld matrix.
+    // The offset position of the camera can be found in the fourth column.
+    // Multiply the matrix by the following float4 to get the fourth column
+    // Position is stored in 3 values, so use .xyz to get a float3 and discard
+    // the final value.
+    float3 origin = mul(CameraToWorld, float4(0.0f, 0.0f, 0.0f, 1.0f)).xyz;
+
+    // Use the Inverse Projection Matrix to convert from clip space (view space) to Camera Space.
+    // uv is the scaled position on the screen from [-1, 1] where (0, 0) is the screen center
+    float3 direction = mul(CameraInverseProjection, float4(uv, 0.0f, 1.0f)).xyz;
+
+    // Use the CameraToWorld matrix to convert the point from Camera Space to World Space
+    direction = mul(CameraToWorld, float4(direction, 0.0f)).xyz;
+    // Normalize the result direction vector. (Make its magnitude 1)
+    direction = normalize(direction);
+
+    return CreateRay(origin, direction);
+}
+
 [numthreads(8,8,1)]
 void CSMain (uint3 id : SV_DispatchThreadID)
 {
-    // TODO: insert actual code here!
+    // Get the dimensions of the RenderTexture (The dimensions of the screen)
+    uint width, height;
+    Result.GetDimensions(width, height);
 
-    Result[id.xy] = float4(id.x & id.y, (id.x & 15)/15.0, (id.y & 15)/15.0, 0.0);
+    // Convert pixel location to normalized position [0.0, 1.0]
+    float2 uv = (id.xy + float2(0.5f, 0.5f)) / float2(width, height);
+    // Convert to Clip Space [-1.0, 1.0]
+    uv = uv * 2.0f - 1.0f;
+
+    Ray ray = CreateCameraRay(uv);
+
+    // Skybox
+    // If the ray never hits anything, use the direction to find the correct color
+    // from the Skybox texture.
+    // The direction is in Cartesian Coordinates, and must be converted to Spherical Coordinates
+    // because that's how the Skybox texture is stored.
+    // Wiki on Conversion Equations: https://en.wikipedia.org/wiki/Spherical_coordinate_system#Coordinate_system_conversions
+    // (The x,y,z don't line up with the equations because Unity uses a different axis system)
+    float theta = acos(ray.direction.y) / -PI;
+    float phi = atan2(ray.direction.x, -ray.direction.z) / -PI * 0.5f;
+
+    // SampleLevel is an advanced texture sampling function.
+    // It samples a texture's LOD level/mip map level based on the last parameter. (0 being the most detailed)
+    // The float2 represents the coordinates on the texture to sample.
+    // Microsoft DirectX Docs: https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-to-samplelevel
+    Result[id.xy] = SkyboxTexture.SampleLevel(samplerSkyboxTexture, float2(phi, theta), 0);
 }
