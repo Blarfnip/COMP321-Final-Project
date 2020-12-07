@@ -556,6 +556,7 @@ GameObject:
   - component: {fileID: 963194227}
   - component: {fileID: 963194226}
   - component: {fileID: 963194229}
+  - component: {fileID: 963194230}
   m_Layer: 0
   m_Name: Main Camera
   m_TagString: MainCamera
@@ -621,13 +622,13 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
-  m_LocalRotation: {x: 0.094384104, y: 0.37989998, z: -0.039001107, w: 0.919373}
-  m_LocalPosition: {x: -1.6, y: 4.39, z: -0.96}
+  m_LocalRotation: {x: 0.09518051, y: 0.36054307, z: -0.037013676, w: 0.92713505}
+  m_LocalPosition: {x: -4.3, y: 3.56, z: -4.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 0}
   m_RootOrder: 0
-  m_LocalEulerAnglesHint: {x: 11.723001, y: 44.902, z: 0}
+  m_LocalEulerAnglesHint: {x: 11.723001, y: 42.5, z: 0}
 --- !u!114 &963194229
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -645,6 +646,22 @@ MonoBehaviour:
   skyboxTexture: {fileID: 2800000, guid: fb6e03c6f9cfcf54b8f4982623246b5c, type: 3}
   directionalLight: {fileID: 705507994}
   reflections: 2
+--- !u!114 &963194230
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 963194225}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9410c49f3bed77649ac7012174404000, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  useAntiAliasing: 0
+  skyboxTexture: {fileID: 2800000, guid: fb6e03c6f9cfcf54b8f4982623246b5c, type: 3}
+  directionalLight: {fileID: 705507994}
+  reflections: 1
 --- !u!1 &1255918544
 GameObject:
   m_ObjectHideFlags: 0

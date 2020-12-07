@@ -157,7 +157,9 @@ RayHit Trace(Ray ray) {
     // Calculate intersections fro 100 spheres
     for(int x = 0; x < 10; x++) {
         for(int z = 0; z < 10; z++) {
-            IntersectSphere(ray, bestHit, float4(x * 4.0, 1.0f, z * 4.0, 1.0f));
+            for(int y = 0; y < 5; y++) {
+                IntersectSphere(ray, bestHit, float4(x * 4.0, 1.0f + (y * 4.0f), z * 4.0, 1.0f));
+            }
         }
     }
     return bestHit;
@@ -167,7 +169,7 @@ float3 Shade(inout Ray ray, RayHit hit) {
     if(hit.distance < 1.#INF) {
         // Arbitrary specularity and albedo values
         // Modify these values for different results
-        float3 specular = float3(0.1f, 0.1f, 0.1f);
+        float3 specular = float3(0.3f, 0.3f, 0.3f);
         float3 albedo = float3(0.8f, 0.8f, 0.8f);
 
         // Set the origin to the ray hit point (but a little above the surface)
@@ -236,6 +238,8 @@ void CSMain (uint3 id : SV_DispatchThreadID)
 
         // Shade the resulting hit
         result += ray.energy * Shade(ray, hit);
+
+        // result *= 1 - (1 * saturate(hit.distance / 25.0));
 
         // if the ray has no energy left, bail
         // any function Docs: https://docs.microsoft.com/en-us/windows/win32/direct3dhlsl/dx-graphics-hlsl-any
