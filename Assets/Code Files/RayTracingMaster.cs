@@ -311,3 +311,5 @@ public class RayTracingMaster : MonoBehaviour
         Render(destination);
     }
 }
+
+
