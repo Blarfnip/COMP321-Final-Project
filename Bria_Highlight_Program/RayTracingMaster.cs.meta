@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: a047e7a3d871bba489c5b2d0bbd9b20a
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - RayTracingShader: {fileID: 7200000, guid: 700d266f58f0b04439546ed440e8f810, type: 3}
+  - SkyboxTexture: {instanceID: 0}
+  - DirectionalLight: {instanceID: 0}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
