@@ -4,7 +4,11 @@
 PlayerSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 20
+<<<<<<< HEAD
   productGUID: 1941ac159c230af489318c069defe291
+=======
+  productGUID: 3892737d642354f4fbe86a4af6933388
+>>>>>>> 4cdbc736a0c0b79a3f31b53710d192d064b4e016
   AndroidProfiler: 0
   AndroidFilterTouchesWhenObscured: 0
   AndroidEnableSustainedPerformanceMode: 0
@@ -13,7 +17,11 @@ PlayerSettings:
   useOnDemandResources: 0
   accelerometerFrequency: 60
   companyName: DefaultCompany
+<<<<<<< HEAD
   productName: COMP321-Final-Project Bria Highlight Work
+=======
+  productName: COMP 321 Final Project
+>>>>>>> 4cdbc736a0c0b79a3f31b53710d192d064b4e016
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
