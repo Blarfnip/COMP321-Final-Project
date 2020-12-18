@@ -15,12 +15,16 @@ public class SoftShadowsMaster : MonoBehaviour
     private Camera camera;
     
     private uint currentSample = 0;
+    
     private Material addMaterial;
     
     public Light DirectionalLight;
     
     public bool antiAliasing =true;
     
+    //public int SphereSeed;
+    
+    //private RenderTexture converged;
     
     [Header("_Spheres")]
     public Vector2 SphereRadius = new Vector2(3.0f, 8.0f);
@@ -48,6 +52,7 @@ public class SoftShadowsMaster : MonoBehaviour
     }
     private void SetUpScene()
     {
+        //Random.InitState(SphereSeed);
         List<Sphere> spheres = new List<Sphere>();
         // Add a number of random spheres
         for (int i = 0; i < SpheresMax; i++)
@@ -55,6 +60,7 @@ public class SoftShadowsMaster : MonoBehaviour
             Sphere sphere = new Sphere();
             // Radius and radius
             sphere.radius = SphereRadius.x + Random.value * (SphereRadius.y - SphereRadius.x);
+            //sphere.radius = SphereRadius.x * (SphereRadius.y - SphereRadius.x);
             Vector2 randomPos = Random.insideUnitCircle * SpherePlacementRadius;
             sphere.position = new Vector3(randomPos.x, sphere.radius, randomPos.y);
             // Reject spheres that are intersecting others
@@ -65,16 +71,21 @@ public class SoftShadowsMaster : MonoBehaviour
                     goto SkipSphere;
             }
             // Albedo and specular color
-            Color color = Random.ColorHSV();
-            //Color colorSpecular = new Vector3();
+            //HSV has to be used
+            //Color color = Random.ColorHSV();
             //bool metal = Random.value < 0.5f;
-            bool metal = true;
-            sphere.albedo = metal ? new Vector3(0.2f,0.2f,0.2f) : new Vector3(color.r, color.g, color.b);
-            sphere.specular = metal ? new Vector3(color.r, color.g, color.b) : Vector3.one * 0.04f;
+            //bool metal = false;
+            //sphere.albedo = metal ? Vector3.zero : new Vector3(color.r, color.g, color.b);
+            bool silver = randomPos.x <0.5f;
+            sphere.albedo = silver ? new Vector3(0.3f,0.3f,0.3f) : new Vector3(0.0f, 0.0f, 0.2f);
+            sphere.specular = silver ? new Vector3(0.5f, 0.5f, 0.5f) : Vector3.one * 0.02f;
+            
+    
+            //sphere.specular = metal ? new Vector3(color.r, color.g, color.b) : Vector3.zero;
             // Add the sphere to the list
             spheres.Add(sphere);
-        SkipSphere:
-            continue;
+            SkipSphere:
+                continue;
         }
         // Assign to compute buffer
         if (_sphereBuffer != null)
@@ -103,6 +114,7 @@ public class SoftShadowsMaster : MonoBehaviour
         Vector3 l = DirectionalLight.transform.forward;
         SoftShadowsShader.SetVector("DirectionalLight", new Vector4(l.x, l.y, l.z, DirectionalLight.intensity));
         SoftShadowsShader.SetBuffer(0, "_Spheres", _sphereBuffer);
+        //SoftShadowsShader.SetFloat("_Seed", Random.value);
 
         Render(destination);
     }
@@ -113,13 +125,19 @@ public class SoftShadowsMaster : MonoBehaviour
         //initializes render texture
         if(target == null || target.width != Screen.width || target.height!=Screen.height)
         {
-            if(target != null)
+            if(target != null){
                 target.Release();
+                //converged.Release();
+            }
             
             target = new RenderTexture(Screen.width, Screen.height, 0,
                 RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
             target.enableRandomWrite = true;
             target.Create();
+            /*converged = new RenderTexture(Screen.width, Screen.height, 0,
+                RenderTextureFormat.ARGBFloat, RenderTextureReadWrite.Linear);
+            converged.enableRandomWrite = true;
+            converged.Create();*/
             currentSample = 0;
         }
         
@@ -137,9 +155,24 @@ public class SoftShadowsMaster : MonoBehaviour
                 addMaterial = new Material(Shader.Find("Hidden/ExtraShader"));
             addMaterial.SetFloat("_Sample", currentSample);
             Graphics.Blit(target, destination, addMaterial);
+            //Graphics.Blit(target, converged, addMaterial);
+            //Graphics.Blit(converged, destination);
             currentSample++;
         }
-        else{Graphics.Blit(target, destination);}
+        else
+        {
+            Graphics.Blit(target,destination);
+            //Graphics.Blit(target,converged);
+            //Graphics.Blit(converged, destination);
+        }
+        
+        /*if (addMaterial == null)
+                addMaterial = new Material(Shader.Find("Hidden/ExtraShader"));
+            addMaterial.SetFloat("_Sample", currentSample);
+            //Graphics.Blit(target,addMaterial, destination);
+            Graphics.Blit(target, converged, addMaterial);
+            Graphics.Blit(converged, destination);
+            currentSample++;*/
     }
     
     // Update is called once per frame
