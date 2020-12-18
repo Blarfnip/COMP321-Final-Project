@@ -14,14 +14,14 @@ RWTexture2D<float4> Result;
 // These matrices contain Translation, Rotation, and Scale data
 // Read about decomposing here: https://answers.unity.com/questions/402280/how-to-decompose-a-trs-matrix.html
 // Official Unity Docs: https://docs.unity3d.com/ScriptReference/Matrix4x4.TRS.html
-float4x4 CameraToWorld;
+float4x4 _CameraToWorld;
 
 
 // A Projection matrix is used for transforming points from Camera Space to Clip Space
 // We are using the inverse of that to convert a point in "clip space" (similar to view space)
 // to Camera space.
 // Official Unity Docs: https://docs.unity3d.com/ScriptReference/Camera-projectionMatrix.html
-float4x4 CameraInverseProjection;
+float4x4 _CameraInverseProjection;
 
 
 // Compressed values for the Directional light in the scene
@@ -32,12 +32,12 @@ float2 _PixelOffset;
 
 // Reference to Skybox HDRI texture
 // Example taken from here: https://hdrihaven.com/hdri/?c=skies&h=kiara_1_dawn
-Texture2D<float4> SkyboxTexture;
+Texture2D<float4> _SkyboxTexture;
 // Texture sampler for getting values from the texture.
 // This is an advanced way of sampling from textures and comes with the advantage
 // of minimizing samplers if more textures are needed.
 // Official Unity Docs: https://docs.unity3d.com/Manual/SL-SamplerStates.html
-SamplerState samplerSkyboxTexture;
+SamplerState sampler_SkyboxTexture;
 
 // PI Const used for trig stuff
 static const float PI = 3.14159265f;
