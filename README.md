@@ -7,7 +7,7 @@ This  project implements GPU accelerated ray tracing using Unity and HLSL comput
 ### Installation
 This project is using ```Unity LTS 2019.4.14f1```. It is an exploration of HLSL computer shaders, so a DirectX compatible GPU is also required. To open, run Unity and open the github root folder. Press the Play button to run. (GPU compute effects run without the game playing.)
 
-## Checking Efficiency
+### Checking Efficiency
 Open the profiler through `Window > Analysis > Profiler` in Unity. When the engine is running (The play button was pressed), the profiler will record detailed frame timing. This can be analyzed to find individual timing of the code and functions on both the CPU and GPU (main thread and render thread).
 
 ### Resources
