@@ -29,7 +29,7 @@ public class SoftShadowsMaster : MonoBehaviour
     [Header("_Spheres")]
     public Vector2 SphereRadius = new Vector2(3.0f, 8.0f);
     public uint SpheresMax = 50;
-    public float SpherePlacementRadius = 100.0f;
+    public float SpherePlacementRadius = 80.0f;
     
     private ComputeBuffer _sphereBuffer;
     
@@ -58,11 +58,11 @@ public class SoftShadowsMaster : MonoBehaviour
         for (int i = 0; i < SpheresMax; i++)
         {
             Sphere sphere = new Sphere();
-            // Radius and radius
+            
             sphere.radius = SphereRadius.x + Random.value * (SphereRadius.y - SphereRadius.x);
-            //sphere.radius = SphereRadius.x * (SphereRadius.y - SphereRadius.x);
             Vector2 randomPos = Random.insideUnitCircle * SpherePlacementRadius;
             sphere.position = new Vector3(randomPos.x, sphere.radius, randomPos.y);
+            
             // Reject spheres that are intersecting others
             foreach (Sphere other in spheres)
             {
@@ -70,18 +70,21 @@ public class SoftShadowsMaster : MonoBehaviour
                 if (Vector3.SqrMagnitude(sphere.position - other.position) < minDist * minDist)
                     goto SkipSphere;
             }
-            // Albedo and specular color
-            //HSV has to be used
+            
+            //HSV has to be used for randomized color
             //Color color = Random.ColorHSV();
             //bool metal = Random.value < 0.5f;
             //bool metal = false;
-            //sphere.albedo = metal ? Vector3.zero : new Vector3(color.r, color.g, color.b);
+            
+            
+            //Albedo and specularity determined by position instead of random value
             bool silver = randomPos.x <0.5f;
             sphere.albedo = silver ? new Vector3(0.3f,0.3f,0.3f) : new Vector3(0.0f, 0.0f, 0.2f);
             sphere.specular = silver ? new Vector3(0.5f, 0.5f, 0.5f) : Vector3.one * 0.02f;
             
-    
+            //sphere.albedo = metal ? Vector3.zero : new Vector3(color.r, color.g, color.b);
             //sphere.specular = metal ? new Vector3(color.r, color.g, color.b) : Vector3.zero;
+            
             // Add the sphere to the list
             spheres.Add(sphere);
             SkipSphere:
