@@ -1,6 +1,6 @@
-﻿Shader "Hidden/AddShader"
+﻿Shader "Hidden/Hidden_Shader"
 {
-	Properties
+    Properties
 	{
 		_MainTex ("Texture", 2D) = "white" {}
 	}

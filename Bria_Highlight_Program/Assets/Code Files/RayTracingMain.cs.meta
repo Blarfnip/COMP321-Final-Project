@@ -1,11 +1,11 @@
 fileFormatVersion: 2
-guid: c37a277a3c22bae4e8eb95e8eb50e6d4
+guid: 56d2213e4042d5b4e9fa321dd13e4bc8
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
   defaultReferences:
-  - RayTracingShader: {fileID: 7200000, guid: b2d4df05371482a4697f6c68caa0792a, type: 3}
-  - SkyboxTexture: {fileID: 2800000, guid: 8e37fb6965791a9439ab017bc1b62fd9, type: 3}
+  - RayTracingShader: {fileID: 7200000, guid: 16e194c9aa57eb8428190a45dfb2058a, type: 3}
+  - SkyboxTexture: {fileID: 2800000, guid: 0598cf5732e3b394782dfebbb4447ffa, type: 3}
   - DirectionalLight: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
