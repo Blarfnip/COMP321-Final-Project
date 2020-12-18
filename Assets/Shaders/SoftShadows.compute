@@ -17,9 +17,9 @@ float4 DirectionalLight;
 
 static const float PI = 3.14159265f;
 
-float specularity_r;
-float specularity_g;
-float specularity_b;
+//float specularity_r;
+//float specularity_g;
+//float specularity_b;
 
 
 struct Ray
@@ -28,6 +28,16 @@ struct Ray
     float3 direction;
     float3 energy;
 };
+
+struct Sphere
+{
+    float3 position;
+    float radius;
+    float3 albedo;
+    float3 specular;
+};
+
+StructuredBuffer<Sphere> _Spheres;
 
 Ray CreateRay(float3 origin, float3 direction)
 {
@@ -57,6 +67,8 @@ struct RayHit
     float3 position;
     float distance;
     float3 normal;
+    float3 specular;
+    float3 albedo;
 };
 
 RayHit CreateRayHit()
@@ -65,6 +77,8 @@ RayHit CreateRayHit()
     hit.position = float3(0.0f, 0.0f, 0.0f);
     hit.distance = 1.#INF;
     hit.normal = float3(0.0f, 0.0f, 0.0f);
+    hit.specular = float3(0.0f, 0.0f, 0.0f);
+    hit.albedo = float3(0.0f, 0.0f, 0.0f);
     return hit;
 }
 
@@ -77,9 +91,34 @@ void IntersectGroundPlane(Ray ray, inout RayHit bestHit)
         bestHit.distance = t;
         bestHit.position = ray.origin + t * ray.direction;
         bestHit.normal = float3(0.0f, 1.0f, 0.0f);
+        bestHit.albedo = float3(0.3f,0.3f,0.3f);
+        //bestHit.specular = float3(0.04f,0.04f,0.04f);
+        bestHit.specular = float3(1.0f,0.78f,0.34f);
     }
 }
 
+void IntersectSphere(Ray ray, inout RayHit bestHit, uint sphereIndex)
+{
+    Sphere sphere = _Spheres[sphereIndex];
+    // Calculate distance along the ray where the sphere is intersected
+    float3 d = ray.origin - sphere.position;
+    float p1 = -dot(ray.direction, d);
+    float p2sqr = p1 * p1 - dot(d, d) + sphere.radius * sphere.radius;
+    if (p2sqr < 0)
+        return;
+    float p2 = sqrt(p2sqr);
+    float t = p1 - p2 > 0 ? p1 - p2 : p1 + p2;
+    if (t > 0 && t < bestHit.distance)
+    {
+        bestHit.distance = t;
+        bestHit.position = ray.origin + t * ray.direction;
+        bestHit.normal = normalize(bestHit.position - sphere.position);
+        bestHit.albedo = sphere.albedo;
+        bestHit.specular = sphere.specular;
+    }
+}
+
+/*
 void IntersectSphere(Ray ray, inout RayHit bestHit, float4 sphere)
 {
     // Calculate distance along the ray where the sphere is intersected
@@ -96,17 +135,23 @@ void IntersectSphere(Ray ray, inout RayHit bestHit, float4 sphere)
         bestHit.position = ray.origin + t * ray.direction;
         bestHit.normal = normalize(bestHit.position - sphere.xyz);
     }
-}
+}*/
 
 RayHit Trace(Ray ray)
 {
     RayHit bestHit = CreateRayHit();
     IntersectGroundPlane(ray, bestHit);
+    /*
     for(int i=0;i<25;i+=5){
         for(int j=0;j<25;j+=5){
             IntersectSphere(ray, bestHit, float4(i, 1.0f, j, 1.0f));
         }
-    }
+    }*/
+    //num spheres has to match maxSpheres in SoftShadowsMaster
+    //Metal shaders don't permit the use of getDimensions on buffers
+    uint numSpheres = 50;
+    for (uint i = 0; i < numSpheres; i++)
+        IntersectSphere(ray, bestHit, i);
     return bestHit;
 }
 
@@ -114,9 +159,10 @@ float3 Shade(inout Ray ray, RayHit hit)
 {
     if (hit.distance < 1.#INF)
     {
-        //float3 specular = float3(specularity_r, specularity_g, specularity_b);
-        float3 specular = float3( 1.0f, 0.78f, 0.34f);
-        float3 albedo = float3(0.2f, 0.2f, 0.2f);
+        float3 specular =hit.specular;
+        float3 albedo = hit.albedo;
+        //float3 specular = float3( 1.0f, 0.78f, 0.34f);
+        //float3 albedo = float3(0.2f, 0.2f, 0.2f);
         // Reflect the ray and multiply energy with specular reflection
         ray.origin = hit.position + hit.normal * 0.001f;
         ray.direction = reflect(ray.direction, hit.normal);
@@ -134,7 +180,7 @@ float3 Shade(inout Ray ray, RayHit hit)
     }
     else
     {
-        // Erase the ray's energy - the sky doesn't reflect anything
+        // removes reflection for sky
         ray.energy = 0.0f;
         // Sample the skybox and write it
         float theta = acos(ray.direction.y) / -PI;
@@ -165,6 +211,4 @@ void CSMain (uint3 id : SV_DispatchThreadID)
             break;
     }
     Result[id.xy] = float4(result, 1);
-
-
 }
